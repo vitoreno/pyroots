@@ -1,3 +1,4 @@
+from decimal import DivisionByZero
 import torch
 import torchvision
 import random
@@ -14,6 +15,8 @@ from NetworkModels import Net, BinaryNet
 from RootUtils import *
 
 import argparse
+
+import pandas as pd
 
 
 def main(args):
@@ -41,9 +44,9 @@ def main(args):
     val_loader = torch.utils.data.DataLoader(val_set, batch_size=args.batch_size, shuffle=True, num_workers=4)
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    net = BinaryNet()
+    net = BinaryNet(args.img_width_height)
     if not args.bTrain:
-        model_fn = args.model_fn #'.\\models\\20220711_165340.pth'
+        model_fn = f'.\\models\\{args.model_fn}' #'.\\models\\20220711_165340.pth'
         net.load_state_dict(torch.load(model_fn))
     net.to(device)
     
@@ -75,8 +78,9 @@ def main(args):
         print('Finished Training')
 
         now = datetime.datetime.now()
-        model_fn = now.strftime('%Y%m%d_%H%M%S')
-        torch.save(net.state_dict(), f'.\\models\\{model_fn}.pth')
+        now_str = now.strftime('%Y%m%d_%H%M%S')
+        model_fn = f'.\\models\\{now_str}.pth'
+        torch.save(net.state_dict(), model_fn)
         with open('models\\recap.md', 'a') as f:
             f.write(f"\nmodel: {model_fn} args: {str(args)}\n")
 
@@ -85,6 +89,10 @@ def main(args):
         total = 0
         # since we're not training, we don't need to calculate the gradients for our outputs
         correct_threshold = 0.2
+        thr_range = torch.arange(0.1, 1.1, 0.1)
+        validation_results = {}
+        for idx, correct_threshold in enumerate(thr_range):
+            validation_results[idx+1] = {'tn': 0, 'tp': 0, 'fn': 0, 'fp': 0}
         with torch.no_grad():
             for data in val_loader:
                 images, labels = data[0].to(device), data[1].to(device)
@@ -92,11 +100,43 @@ def main(args):
                 outputs = net(images)
                 # the class with the highest energy is what we choose as prediction
                 # _, predicted = torch.max(outputs.data, 1)
-                predicted = torch.sigmoid(outputs)
+                raw_predicted = torch.sigmoid(outputs)
                 total += labels.size(0)
-                correct += (torch.abs(predicted - labels.reshape(-1,1)) < correct_threshold).sum().item()
-        
-        print(f'Accuracy of the network on the {total} test images: {100 * correct // total} %')
+                labels = labels.reshape(-1,1)
+                #correct += (torch.abs(predicted - labels.reshape(-1,1)) < correct_threshold).sum().item()
+                for idx, correct_threshold in enumerate(thr_range):
+                    predicted = copy.deepcopy(raw_predicted)
+                    predicted[predicted < correct_threshold] = 0
+                    predicted[predicted >= correct_threshold] = 1
+                    validation_results[idx+1]['tn'] += torch.logical_and(predicted == 0, labels == 0).sum().item()
+                    validation_results[idx+1]['tp'] += torch.logical_and(predicted == 1, labels == 1).sum().item()
+                    validation_results[idx+1]['fn'] += torch.logical_and(predicted == 0, labels == 1).sum().item()
+                    validation_results[idx+1]['fp'] += torch.logical_and(predicted == 1, labels == 0).sum().item()
+            
+            for idx, correct_threshold in enumerate(thr_range):
+                res = validation_results[idx+1]
+                try:
+                    res['accuracy'] = (res['tn'] + res['tp']) / (res['tn'] + res['tp'] + res['fn'] + res['fp'])
+                except Exception:
+                    res['accuracy'] = 'N/A'
+                try:
+                    res['precision'] = res['tp'] / (res['tp'] + res['fp'])
+                except Exception:
+                    res['precision'] = 'N/A'
+                try:
+                    res['recall'] = res['tp'] / (res['tp'] + res['fn'])
+                except Exception:
+                    res['recall'] = 'N/A'
+                try:
+                    res['F1'] = 2 * (res['precision']*res['recall']) / (res['precision']+res['recall'])
+                except Exception:
+                    res['F1'] = 'N/A'
+        # verificare il funzionamento ed esportare il dataframe su file
+        df = pd.DataFrame(validation_results)
+        print(df.to_string())
+        export_fn = model_fn.replace("models", "validation")[:-4]
+        df.to_csv(f'{export_fn}.csv', sep=';', float_format='%.4f')
+        df.to_pickle(f'{export_fn}.pkl')
 
 
 if __name__ == '__main__':
@@ -106,6 +146,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', dest='DATASET_PATH', default='.\\data', help='Dataset path')
     parser.add_argument('--batch_size', dest='batch_size', type=int, default=32, help='Batch size')
     parser.add_argument('--model_fn', dest='model_fn', default='model.pth', help='Model filename')
+    parser.add_argument('--img_width_height', dest='img_width_height', type=int, default=65, help='Size of width/height of the squared patch')
 
     args = parser.parse_args()
     main(args)

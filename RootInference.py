@@ -12,7 +12,7 @@ transform = T.Compose([T.ToTensor(),
 T_norm = T.Normalize((0.5, 0.5, 0.5), (0.1, 0.1, 0.1))
 
 img_fn = 'C:\\Users\\vitor\\Desktop\\Roots20210208_Subset\\compositeImage\\CIC09C15A001_2019-10-15_cV_iS_compositeImage.png'
-model_fn = '.\\models\\20220713_172832.pth'
+model_fn = '.\\models\\20220923_171621.pth'
 HALF_WINDOW_SIZE = 32
 batch_size = 128
 
