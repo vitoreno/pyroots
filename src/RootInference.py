@@ -1,5 +1,4 @@
 import torch
-import torchvision
 import numpy as np
 import torchvision.transforms as T
 import cv2
