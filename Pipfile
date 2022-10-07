@@ -12,8 +12,12 @@ name = "pytorch"
 numpy = "*"
 opencv-python = "*"
 torch = "*"
+pre-commit = "*"
 
 [dev-packages]
+flake8 = "*"
+isort = "*"
+black = "*"
 
 [requires]
 python_version = "3.9"

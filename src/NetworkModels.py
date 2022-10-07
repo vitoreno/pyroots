@@ -1,5 +1,6 @@
-from torch import nn, flatten
 import torch.nn.functional as F
+from torch import flatten, nn
+
 
 class Net(nn.Module):
     def __init__(self):
@@ -8,7 +9,7 @@ class Net(nn.Module):
         self.conv2 = nn.Conv2d(64, 32, 3)
         self.conv3 = nn.Conv2d(32, 16, 3)
         self.pool = nn.MaxPool2d(2, 2)
-        
+
         self.fc1 = nn.Linear(16 * 6 * 6, 64)
         self.fc2 = nn.Linear(64, 2)
 
@@ -29,7 +30,7 @@ class BinaryNet(nn.Module):
         self.conv2 = nn.Conv2d(64, 32, 3)
         self.conv3 = nn.Conv2d(32, 16, 3)
         self.pool = nn.MaxPool2d(2, 2)
-        
+
         self.fc1 = nn.Linear(16 * 6 * 6, 64)
         self.fc2 = nn.Linear(64, 1)
 

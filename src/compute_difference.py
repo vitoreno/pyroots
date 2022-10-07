@@ -1,6 +1,7 @@
+import argparse
+
 import cv2
 import numpy as np
-import argparse
 
 
 def get_metrics(args):
@@ -18,22 +19,23 @@ def get_metrics(args):
     tn = np.count_nonzero(np.logical_and(or_img == 0, pred_img == 0))
     tp = np.count_nonzero(np.logical_and(or_img == 1, pred_img == 1))
 
-    print(f'true positive {tp}')
-    print(f'false positive {fp}')
-    print(f'false negative {fn}')
-    print(f'true negative {tn}')
+    print(f"true positive {tp}")
+    print(f"false positive {fp}")
+    print(f"false negative {fn}")
+    print(f"true negative {tn}")
     p = tp / (tp + fp)
-    print(f'precision {round(p*100, 2)}')
+    print(f"precision {round(p*100, 2)}")
     r = tp / (tp + fn)
-    print(f'recall {round(r*100, 2)}')
+    print(f"recall {round(r*100, 2)}")
     a = (tp + tn) / (tp + tn + fp + fn)
-    print(f'accuracy {round(a*100, 2)}')
+    print(f"accuracy {round(a*100, 2)}")
     f1 = 2 * (p * r) / (p + r)
-    print(f'f1 score {round(f1*100, 2)}')
+    print(f"f1 score {round(f1*100, 2)}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-o', '--or_img_path')
-    parser.add_argument('-p', '--pred_img_path')
+    parser.add_argument("-o", "--or_img_path")
+    parser.add_argument("-p", "--pred_img_path")
     args = parser.parse_args()
     get_metrics(args)
