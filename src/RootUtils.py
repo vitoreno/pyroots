@@ -23,7 +23,7 @@ def TrainValSplit(orig_set, TRAIN_PERC=0.7):
     targets = np.array(copy.deepcopy(orig_set.targets), dtype=np.uint8)
     train_idx = []
     val_idx = []
-    for class_idx, class_name in enumerate(orig_set.classes):
+    for class_idx, _ in enumerate(orig_set.classes):
         first_idx = np.where(targets == class_idx)[0][0]
         last_idx = np.where(targets == class_idx)[0][-1]
         class_shuffled_idx = list(range(first_idx, last_idx + 1))
