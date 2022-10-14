@@ -7,3 +7,6 @@ test/
 *.png
 *.tif
 *.jpg
+
+*.csv
+*.txt

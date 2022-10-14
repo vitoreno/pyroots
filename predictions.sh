@@ -1,0 +1,1 @@
+python scripts/compute_difference.py -o "data/ground_truth/CIC09C15A001_2019-10-21_cV_iS_GroundTruth.png" -p "data/preds_or_weights/CIC09C15A022_2019-10-21_cV_iS_compositeImage.png-pre-mask-segnet-(8,5).jpg" -s res.txt

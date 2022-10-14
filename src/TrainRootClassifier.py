@@ -12,7 +12,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torchvision.transforms as T
 from NetworkModels import Net, BinaryNet
-from RootUtils import *
+from utils.RootUtils import *
 
 import argparse
 
