@@ -13,6 +13,10 @@ numpy = "*"
 opencv-python = "*"
 torch = "*"
 pre-commit = "*"
+sphinx = "*"
+pandas = "*"
+playsound = "*"
+pygame = "*"
 
 [dev-packages]
 flake8 = "*"
