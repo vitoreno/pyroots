@@ -1,56 +1,73 @@
-from concurrent.futures import process
+# python datumaro_to_gt.py -f .\data\raw\cracks\annotations\default.json -p .\data\raw\cracks\images\default\
+
+import argparse
 import json
 import cv2
-import os
+from pathlib import Path
 import copy
+from pdb import set_trace
 
 
-BASE_PATH = '\\\\srv03.ba.stiima.cnr.it\\data01\\datasets\\Roots\\barley'
-LINE_THICKNESS = 3
+def main(args):
+    with open(args.filename, 'r') as f:
+        data = json.load(f)
 
-with open('20220923_barley_roots.json', 'r') as read_file:
-    data = json.load(read_file)
+    cv2.namedWindow('Image', cv2.WINDOW_FREERATIO)
+    cv2.namedWindow('GT Mask', cv2.WINDOW_FREERATIO)
+
+    processed_img = 0
+    # set_trace()
+    for item in data['items']:
+        if len(item['annotations']) == 0:
+            continue
+        fn = Path(args.base_path, f"{item['id']}.{args.extension}")
+        img = cv2.imread(str(fn))
+        try:
+            gt_mask = copy.deepcopy(img[:,:,0])
+            gt_mask *= 0
+            for ann in item['annotations']:
+                if ann['type'] == 'polyline':
+                    p_list = ann['points']
+                    pts = list(zip(p_list[0::2], p_list[1::2]))
+                    for idx in range(1, len(pts)):
+                        x0, y0 = int(pts[idx-1][0]), int(pts[idx-1][1])
+                        x1, y1 = int(pts[idx][0]), int(pts[idx][1])
+                        cv2.line(gt_mask, (x0, y0), (x1, y1), 255, args.line_thickness)
+                        f"{item['id'].split('/')[1:]}.{args.extension}".replace('compositeImage', 'GroundTruth')
+            out_path = Path(fn.parent, f"{fn.name.split('.')[0]}_gt.{fn.name.split('.')[-1]}")
+            cv2.imwrite(str(out_path), gt_mask)
+        except Exception as e:
+            print(e)    
+        processed_img += 1
+
+        if processed_img % 100 == 99:
+            print(f'Processed {processed_img} imgs')
+
+    cv2.destroyAllWindows()
 
 
-cv2.namedWindow('Image', cv2.WINDOW_FREERATIO)
-cv2.namedWindow('GT Mask', cv2.WINDOW_FREERATIO)
-
-#item = data['items'][-1]
-processed_img = 0
-for item in data['items']:
-    if len(item['annotations']) == 0:
-        continue
-    
-    fn = os.path.join(BASE_PATH, item['id']) + '.png'
-    img = cv2.imread(fn)
-
-    #cv2.imshow("Image", img)
-    #key = cv2.waitKey()
-
-    gt_mask = copy.deepcopy(img[:,:,0])
-    gt_mask *= 0
-    
-    for ann in item['annotations']:
-        if ann['type'] == 'polyline':
-            p_list = ann['points']
-            pts = list(zip(p_list[0::2], p_list[1::2]))
-            for idx in range(1, len(pts)):
-                x0, y0 = int(pts[idx-1][0]), int(pts[idx-1][1])
-                x1, y1 = int(pts[idx][0]), int(pts[idx][1])
-                cv2.line(gt_mask, (x0, y0), (x1, y1), 255, LINE_THICKNESS)
-                #cv2.line(img, (x0, y0), (x1, y1), (0,0,255), LINE_THICKNESS)
-            
-            #for x, y in pts:
-            #    cv2.drawMarker(img, (int(x), int(y)), (0, 0, 255), cv2.MARKER_CROSS, 5, 2)
-
-    #cv2.imshow("Image", img)
-    #cv2.imshow("GT Mask", gt_mask)
-    #key = cv2.waitKey()
-
-    cv2.imwrite(f"{os.path.join(BASE_PATH, 'Roots20220923_Subset', *item['id'].split('/')[1:])}.png", img)
-    cv2.imwrite(f"{os.path.join(BASE_PATH, 'Roots20220923_Subset', 'GroundTruth', item['id'].split('/')[-1].replace('compositeImage', 'GroundTruth'))}.png", gt_mask)
-    processed_img += 1
-    if processed_img % 100 == 99:
-        print(f'Processed {processed_img} imgs')
-
-cv2.destroyAllWindows()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-f',
+        '--filename',
+        help='Name of the file where the annotations are stored',
+        required=True)
+    parser.add_argument(
+        '-l',
+        '--line_thickness',
+        help='Thickness of the line',
+        type=int,
+        default=3)
+    parser.add_argument(
+        '-p',
+        '--base_path',
+        help='Path where results should be stored',
+        default='')
+    parser.add_argument(
+        '-e',
+        '--extension',
+        default='JPG'
+    )
+    args = parser.parse_args()
+    main(args)

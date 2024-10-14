@@ -1,41 +1,42 @@
-from decimal import DivisionByZero
 import torch
 import torchvision
 import random
 import copy
-import numpy as np
 import datetime
 
 from torch import nn
-import torch.nn.functional as F
 
 import torch.optim as optim
 import torchvision.transforms as T
-from NetworkModels import Net, BinaryNet
-from RootUtils import *
+from src.NetworkModels import BinaryNet
+from src.RootUtils import *
 
 import argparse
+from pathlib import Path
 
 import pandas as pd
+
 
 
 def main(args):
     RNG_SEED = 42
     random.seed(RNG_SEED)
 
-    #args.DATASET_PATH = "C:\\Users\\vitor\\Desktop\\bin_class_65"
     TRAIN_PERC = 0.7
     N_TRAIN_EPOCHS = 20
 
-    transform = T.Compose([T.ToTensor(),
-                            T.RandomRotation(45),
-                            T.RandomVerticalFlip(),
-                            T.RandomHorizontalFlip(),
-                            T.RandomAdjustSharpness(2),
-                            T.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5),
-                            T.RandomAutocontrast(),
-                            #T.RandomEqualize(), 
-                            T.Normalize((0.5, 0.5, 0.5), (0.1, 0.1, 0.1))])
+    if args.augment:
+        transform = T.Compose([T.ToTensor(),
+                                T.RandomRotation(45),
+                                T.RandomVerticalFlip(),
+                                T.RandomHorizontalFlip(),
+                                T.RandomAdjustSharpness(2),
+                                T.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5),
+                                T.RandomAutocontrast(),
+                                T.Normalize((0.5, 0.5, 0.5), (0.1, 0.1, 0.1))])
+    else:
+        transform = T.Compose([T.ToTensor(),
+                               T.Normalize((0.5, 0.5, 0.5), (0.1, 0.1, 0.1))])
     
     orig_set = torchvision.datasets.ImageFolder(args.DATASET_PATH, transform)  # your dataset
     train_set, val_set = TrainValSplit(orig_set, TRAIN_PERC)
@@ -79,9 +80,10 @@ def main(args):
 
         now = datetime.datetime.now()
         now_str = now.strftime('%Y%m%d_%H%M%S')
-        model_fn = f'.\\models\\{now_str}.pth'
+        Path(args.results).mkdir(parents=True, exist_ok=True)
+        model_fn = Path(args.results, f'{now_str}.pth')
         torch.save(net.state_dict(), model_fn)
-        with open('models\\recap.md', 'a') as f:
+        with open('recap.md', 'a') as f:
             f.write(f"\nmodel: {model_fn} args: {str(args)}\n")
 
     if args.bValidate:
@@ -143,7 +145,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='TrainRootClassifier')
     parser.add_argument('--train', dest='bTrain', type=bool, action=argparse.BooleanOptionalAction, default=True, help='Train model')
     parser.add_argument('--val', dest='bValidate', type=bool, action=argparse.BooleanOptionalAction, default=True, help='Validate model')
+    parser.add_argument('--augment', default=True, type=bool)
     parser.add_argument('--dataset', dest='DATASET_PATH', default='.\\data', help='Dataset path')
+    parser.add_argument('--results', '-r', default='results', help='Results path')
     parser.add_argument('--batch_size', dest='batch_size', type=int, default=32, help='Batch size')
     parser.add_argument('--model_fn', dest='model_fn', default='model.pth', help='Model filename')
     parser.add_argument('--img_width_height', dest='img_width_height', type=int, default=65, help='Size of width/height of the squared patch')

@@ -1,3 +1,8 @@
+# encoded utf-8
+""" Todo
+
+Usage, description, refactoring
+"""
 import argparse
 
 import cv2

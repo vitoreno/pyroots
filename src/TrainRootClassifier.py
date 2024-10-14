@@ -1,3 +1,4 @@
+# python3 src/TrainRootClassifier.py --dataset data/processed/cracks_65/ --model_fn cracks_65.pth
 import argparse
 import copy
 import datetime
@@ -11,8 +12,92 @@ import torchvision
 import torchvision.transforms as T
 from torch import nn
 
-from src.NetworkModels import BinaryNet, Net
-from src.RootUtils import *
+# from src.NetworkModels import BinaryNet, Net
+# from src.RootUtils import *
+from torch import nn, flatten
+import torch.nn.functional as F
+
+def TrainValSplit(orig_set, TRAIN_PERC=0.7):
+    """Suddivide un ImageFolder dataset in training e test set
+    mediante sottocampionamento uniforme delle istanze delle
+    varie classi
+
+    input
+    orig_set -- dataset complessivo
+    TRAIN_PERC -- percentuale per il training set
+
+    output
+    train_set -- pytorch subset per il training
+    val_set -- pytorch subset per il validation
+    """
+    VAL_PERC = 1 - TRAIN_PERC
+    # Ricopio i target in un array numpy
+    targets = np.array(copy.deepcopy(orig_set.targets), dtype=np.uint8)
+    train_idx = []
+    val_idx = []
+    for class_idx, _ in enumerate(orig_set.classes):
+        first_idx = np.where(targets == class_idx)[0][0]
+        last_idx = np.where(targets == class_idx)[0][-1]
+        class_shuffled_idx = list(range(first_idx, last_idx + 1))
+        random.shuffle(class_shuffled_idx)
+        threshold = int(len(class_shuffled_idx) * TRAIN_PERC)
+        train_idx.extend(class_shuffled_idx[:threshold])
+        val_idx.extend(class_shuffled_idx[threshold:])
+
+    train_set = torch.utils.data.Subset(orig_set, train_idx)
+    val_set = torch.utils.data.Subset(orig_set, val_idx)
+    return train_set, val_set
+
+
+
+class Net(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(3, 64, 3)
+        self.conv2 = nn.Conv2d(64, 32, 3)
+        self.conv3 = nn.Conv2d(32, 16, 3)
+        self.pool = nn.MaxPool2d(2, 2)
+        
+        self.fc1 = nn.Linear(16 * 6 * 6, 64)
+        self.fc2 = nn.Linear(64, 2)
+
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(F.relu(self.conv3(x)))
+        x = flatten(x, 1)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+
+
+class BinaryNet(nn.Module):
+    def __init__(self, img_width_height = 65):
+        super().__init__()
+        self.conv_layers = 3
+        self.img_width_height = img_width_height
+        self.conv1 = nn.Conv2d(3, 64, 3)
+        self.conv2 = nn.Conv2d(64, 32, 3)
+        self.conv3 = nn.Conv2d(32, 16, 3)
+        self.pool = nn.MaxPool2d(2, 2)
+        
+        self.fc1 = nn.Linear(16 * self.__get_linear_size(), 64)
+        self.fc2 = nn.Linear(64, 1)
+
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(F.relu(self.conv3(x)))
+        x = flatten(x, 1)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+    
+    def __get_linear_size(self):
+        size = self.img_width_height
+        for i in range(self.conv_layers):
+            size = int((size-2)/2)
+        return size**2
 
 
 def main(args):
@@ -23,7 +108,7 @@ def main(args):
     TRAIN_PERC = 0.7
     N_TRAIN_EPOCHS = 20
 
-    transform = T.Compose(
+    augment = T.Compose(
         [
             T.ToTensor(),
             T.RandomRotation(45),
@@ -37,9 +122,29 @@ def main(args):
         ]
     )
 
-    orig_set = torchvision.datasets.ImageFolder(
-        args.DATASET_PATH, transform
-    )  # your dataset
+    transform = T.Compose(
+        [
+            T.ToTensor(),
+            # T.RandomRotation(45),
+            # T.RandomVerticalFlip(),
+            # T.RandomHorizontalFlip(),
+            # T.RandomAdjustSharpness(2),
+            # T.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5),
+            # T.RandomAutocontrast(),
+            # T.RandomEqualize(),
+            T.Normalize((0.5, 0.5, 0.5), (0.1, 0.1, 0.1)),
+        ]
+    )
+
+    if args.augmentation:
+        orig_set = torchvision.datasets.ImageFolder(
+            args.DATASET_PATH, augment
+        )  # your dataset
+    else:
+        orig_set = torchvision.datasets.ImageFolder(
+            args.DATASET_PATH, transform
+        )
+
     train_set, val_set = TrainValSplit(orig_set, TRAIN_PERC)
 
     train_loader = torch.utils.data.DataLoader(
@@ -131,6 +236,9 @@ if __name__ == "__main__":
         action=argparse.BooleanOptionalAction,
         default=True,
         help="Validate model",
+    )
+    parser.add_argument(
+        '--augmentation', default=False, type=bool
     )
     parser.add_argument(
         "--dataset", dest="DATASET_PATH", default=".\\data", help="Dataset path"

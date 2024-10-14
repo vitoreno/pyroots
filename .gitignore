@@ -1,9 +1,24 @@
+# Cache files
 __pycache__/
 .vscode/
+
+# Common data and results folders
 data/
+results/
+models/
+
+# Model files
 *.pth
-snippets/
-test/
+*.pkl
+
+# Data files
+*.csv
+
+# Image files
 *.png
 *.tif
 *.jpg
+
+# Other
+docs/
+models/

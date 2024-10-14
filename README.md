@@ -16,15 +16,6 @@
 
   <p align="center">
     Python based tools for identifying roots within images.
-    <br />
-    <a href="https://github.com/vitoreno/pyroots"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/vitoreno/pyroots">View Demo</a>
-    ·
-    <a href="https://github.com/vitoreno/pyroots/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/vitoreno/pyroots/issues">Request Feature</a>
   </p>
 </p>
 
@@ -33,23 +24,19 @@
   <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
 
   1. [About The Project](#about-the-project)
-  2. [Built With](#built-with)
-  3. [Getting Started](#getting-started)
-      * [Prerequisites](#prerequisites)
-      * [Installation](#installation)
-  4. [Usage](#usage)
-  5. [Roadmap](#roadmap)
-  6. [Contributing](#contributing)
-  7. [License](#license)
-  8. [Contact](#contact)
-  9. [Acknowledgements](#acknowledgements)
+  2. [Installation](#installation)
+  3. [Usage](#usage)
+  4. [Roadmap](#roadmap)
+  5. [Contributing](#contributing)
+  6. [License](#license)
+  7. [Contact](#contact)
 
 </details>
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-This is the support material for the paper to be published on Pattern Recognition Letters.
+This is the support material for the paper *Patch-based probabilistic identification of plant roots using convolutional neural networks*, published on [Pattern Recognition Letters](https://doi.org/10.1016/j.patrec.2024.05.010).
 
 ### Built With
 
@@ -57,30 +44,13 @@ This is the support material for the paper to be published on Pattern Recognitio
 * [PyTorch](https://pytorch.org/)
 
 <!-- GETTING STARTED -->
-## Getting Started
+## Installation
 
-To get a local copy up and running follow these simple steps.
+The only required prerequisite is a working Python interpreter.
 
-### Prerequisites
+However, an NVIDIA-based GPU is *strongly* recommended, as the software is computationally intensive.
 
-Check if Python is installed:
-
-```sh
-$ python
-
-Python 3.9.5 (default, Nov 23 2021, 15:27:38)
-[GCC 9.3.0] on linux
-Type "help", "copyright", "credits" or "license" for more information.
->>> 
-```
-
-Install [pipenv](https://pipenv.pypa.io/) for dependency and virtual environment management:
-
-```sh
-$ pip3 install pipenv
-```
-
-### Installation
+To install the software:
 
 1. Clone the repo:
    ```sh
@@ -88,7 +58,7 @@ $ pip3 install pipenv
    ```
 2. Install required dependencies and create a virtual environment:
    ```sh
-   pipenv install
+   pip install
    ```
 
 <!-- USAGE EXAMPLES -->
@@ -120,8 +90,8 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contacts
 
-[Vito Renò](mailto:vito.reno@stiima.cnr.it)
-[Angelo Cardellicchio](mailto:angelo.cardellicchio@stiima.cnr.it)
+* [Vito Renò](mailto:vito.reno@stiima.cnr.it)
+* [Angelo Cardellicchio](mailto:angelo.cardellicchio@stiima.cnr.it)
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
